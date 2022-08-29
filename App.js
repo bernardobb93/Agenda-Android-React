@@ -7,15 +7,43 @@ import {
   View,
   TouchableOpacity,
   TextInput,
+  AsyncStorage,
 } from "react-native";
 
 export default function App() {
   const [estado, setarEstado] = useState("leitura");
-  const [anotacao, setarAnotacao] = useState("Minha Anotação");
+  const [anotacao, setarAnotacao] = useState("");
+  
+  useEffect(()=>{
+    (async()=>{
+      try{
+        const anotacaoLeitura = await AsyncStorage.getItem('anotacao');
+        setarAnotacao(anotacaoLeitura);
+      }catch(error){
+
+      }
+    })();
+  },[])
+
+
+  setData=async()=>{
+    try{
+      await AsyncStorage.setItem('anotacao',anotacao)
+    }catch(error){
+
+    }
+  }
+
+  function atualizarTexto(){
+    setarEstado('leitura');
+    setData();
+  }
+
+
   if (estado == "leitura") {
     return (
       <View style={{ flex: 1 }}>
-        <StatusBar style="light" />
+        <StatusBar hidden />
         <View style={styles.header}>
           <Text
             style={{
@@ -28,21 +56,31 @@ export default function App() {
             Aplicativo Anotação
           </Text>
         </View>
+        {(anotacao!="")?
         <View style={{ padding: 20 }}>
           <Text style={styles.anotacao}>{anotacao}</Text>
         </View>
+        :
+        <View style={{ padding: 20 }}>
+          <Text style={{opacity:0.3}}>Nenhuma anotação encontrada:</Text> 
+          </View>
+        }
         <TouchableOpacity
           onPress={() => setarEstado("atualizando")}
           style={styles.btnAnotacao}
         >
+          {(anotacao=="")?
           <Text style={styles.btnAnotacaotexto}>+</Text>
+         :
+         <Text style={{fontSize:12,color:'white',textAlign:'center',marginTop:16}}>Editar</Text>
+        } 
         </TouchableOpacity>
       </View>
     );
   } else if (estado == "atualizando") {
     return (
       <View style={{ flex: 1 }}>
-        <StatusBar style="light" />
+        <StatusBar hidden />
         <View style={styles.header}>
           <Text
             style={{
@@ -57,6 +95,7 @@ export default function App() {
         </View>
 
         <TextInput
+          autoFocus={true}
           onChangeText={(text) => setarAnotacao(text)}
           style={{height:300,textAlignVertical:'top',padding:15}}
           multiline={true}
@@ -66,7 +105,7 @@ export default function App() {
         ></TextInput>
 
         <TouchableOpacity
-          onPress={() => setarEstado("leitura")}
+          onPress={() => atualizarTexto()}
           style={styles.btnAnotacao}
         >
           <Text style={styles.btnAnotacaosalvar}>Salvar</Text>
